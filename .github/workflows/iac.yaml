@@ -1,0 +1,104 @@
+name: IaC Pipeline
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select environment target'
+        required: true
+        type: choice
+        options:
+          - dev
+      working_directory:
+        description: 'Select working directory target'
+        required: true
+        type: choice
+        options:
+          - './iac/dev/'
+      cloud_resource_name:
+        description: 'Choose a cloud resource name'
+        required: true
+        type: string
+      terraform_version:
+        description: 'Choose Terraform version'
+        required: true
+        type: choice
+        options:
+          - 1.9.8
+      terragrunt_version:
+        description: 'Choose Terragrunt version'
+        required: true
+        type: choice
+        options:
+          - 0.68.10
+
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      working_directory:
+        required: true
+        type: string
+      cloud_resource_name:
+        required: true
+        type: string
+      terraform_version:
+        required: true
+        type: string
+      terragrunt_version:
+        required: true
+        type: string
+
+jobs:
+  iac:
+    name: Creating cloud resources
+    environment: 
+      name: ${{ inputs.environment }}
+    env:
+      AWS_REGION: ${{ vars.aws_region }}
+      DYNAMODB_TABLE: ${{ vars.dynamodb_table}}
+      BUCKET_REGION: ${{ vars.bucket_region }}
+      BUCKET_NAME: ${{ vars.bucket_name }}
+      ENV: ${{ inputs.environment }}
+      NAME: ${{ inputs.cloud_resource_name || github.event.repository.name }}
+      TEMPLATE_SECRET: ${{ secrets.TEMPLATE }}
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+    steps:
+    - name: ==== Git checkout ====
+      uses: actions/checkout@v4
+
+    - name: ==== Configure AWS ====
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.aws_role }}
+        aws-region: ${{ vars.aws_region }}
+        role-session-name: Github-OIDC
+
+    - name: Setup Terragrunt ${{ inputs.terragrunt_version }}
+      run: |
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${{ inputs.terragrunt_version }}/terragrunt_linux_amd64
+          mv terragrunt_linux_amd64 terragrunt
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
+          terragrunt -v
+ 
+    - name: Install Helm 
+      run: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        
+    - name: Terragrunt Init 
+      id: init    
+      run: terragrunt run-all init -terragrunt-non-interactive
+
+    - name: Terragrunt plan 
+      id: plan  
+      run: terragrunt run-all plan -terragrunt-non-interactive
+
+    - name: Terragrunt apply 
+      id: apply  
+      run: terragrunt run-all apply -terragrunt-non-interactive

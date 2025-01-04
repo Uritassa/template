@@ -1,0 +1,8 @@
+iac
+kubernetes
+__init__.py
+__pycache__
+.dockerignore
+Dockerfile
+README.md
+.github

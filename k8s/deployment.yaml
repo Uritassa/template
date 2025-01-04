@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gh-flow-demo
+  labels:
+    app: gh-flow-demo
+    app.kubernetes.io/name: gh-flow-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gh-flow-demo
+  template:
+    metadata:
+      labels:
+        app: gh-flow-demo
+    spec:
+      nodeSelector:
+        nodegroup: tools
+      containers:
+        - name: gh-flow-demo
+          image: 750512685552.dkr.ecr.us-west-1.amazonaws.com/gh-flow
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 64m
+              memory: 64Mi
+            limits:
+              cpu: 128m
+              memory: 128Mi
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            failureThreshold: 30
+            periodSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          envFrom:
+            - secretRef:
+                name: gh-flow-demo-secrets
+            - configMapRef:
+                name: gh-flow-demo-cm

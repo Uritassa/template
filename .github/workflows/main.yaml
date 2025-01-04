@@ -1,0 +1,58 @@
+name: CI/CD Main Pipeline
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select environment target'
+        required: true
+        type: choice
+        options:
+          - dev
+
+  push:
+    branches: 
+      - main
+    paths-ignore:
+      - 'k8s/**'
+      - 'iac/**'
+      - '.github/**'
+  workflow_run:
+      workflows: [CI/CD Release Pipeline]
+      types: [completed]
+
+jobs:
+  iac:
+    uses: ./.github/workflows/iac.yaml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      environment: ${{ github.event.inputs.environment || 'dev' }}
+      working_directory: ./iac/dev/
+      cloud_resource_name: ${{ github.event.repository.name }}-${{ github.event.inputs.environment || 'dev' }}
+      terraform_version: 1.9.8
+      terragrunt_version: 0.68.10
+    secrets: inherit 
+  ci:
+    needs: iac
+    uses: ./.github/workflows/ci.yaml
+    permissions:
+      id-token: write
+      contents: read
+    with:
+        environment: ${{ github.event.inputs.environment || 'dev' }}
+        working_directory: ./ 
+        ecr_repository: "${{ github.event.repository.name }}-${{ github.event.inputs.environment || 'dev' }}"
+        image_version: ${{ github.run_id }}
+    secrets: inherit
+  cd:          
+    needs: ci
+    uses: ./.github/workflows/cd.yaml
+    permissions:
+      id-token: write
+      contents: write
+    with:
+        environment: ${{ github.event.inputs.environment || 'dev' }}
+        working_directory: ./k8s
+        image: ${{ needs.ci.outputs.image_output }}
+    secrets: inherit
