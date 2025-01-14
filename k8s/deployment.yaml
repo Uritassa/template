@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gh-flow-demo
+  name: temp-demo
   labels:
-    app: gh-flow-demo
-    app.kubernetes.io/name: gh-flow-demo
+    app: temp-demo
+    app.kubernetes.io/name: temp-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: gh-flow-demo
+      app: temp-demo
   template:
     metadata:
       labels:
-        app: gh-flow-demo
+        app: temp-demo
     spec:
       nodeSelector:
         nodegroup: tools
       containers:
-        - name: gh-flow-demo
-          image: 750512685552.dkr.ecr.us-west-1.amazonaws.com/gh-flow
+        - name: temp-demo
+          image: 123456789310.dkr.ecr.us-west-1.amazonaws.com/temp
           imagePullPolicy: Always
           ports:
             - name: http
@@ -52,6 +52,6 @@ spec:
             periodSeconds: 5
           envFrom:
             - secretRef:
-                name: gh-flow-demo-secrets
+                name: temp-demo-secrets
             - configMapRef:
-                name: gh-flow-demo-cm
+                name: temp-demo-cm

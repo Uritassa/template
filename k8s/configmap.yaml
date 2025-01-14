@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: gh-flow-demo-cm
+  name: temp-demo-cm
 data:
-  NAME: "gh-flow-demo-configMap"
+  NAME: "temp-demo-configMap"
   
