@@ -10,7 +10,7 @@ spec:
     server: https://kubernetes.default.svc
   source:
     path: kubernetes
-    repoURL: https://github.com/e-commander/temp
+    repoURL: https://github.com/Uritassa/temp
     targetRevision: dev
   sources: []
   project: default
