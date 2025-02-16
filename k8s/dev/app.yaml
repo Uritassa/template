@@ -10,7 +10,7 @@ spec:
     server: https://kubernetes.default.svc
   source:
     path: kubernetes
-    repoURL: https://github.com/Uritassa/temp
+    repoURL: https://github.com/Uritassa/template
     targetRevision: dev
   sources: []
   project: default
